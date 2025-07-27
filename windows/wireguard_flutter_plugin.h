@@ -36,12 +36,15 @@ namespace wireguard_flutter
 
     std::unique_ptr<ServiceControl> tunnel_service_;
     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> events_;
+    std::wstring temp_config_file_path_;
 
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnListen(
         const flutter::EncodableValue *arguments,
         std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> &&events);
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnCancel(
         const flutter::EncodableValue *arguments);
+
+    void CleanupTempConfigFile();
   };
 
 } // namespace wireguard_flutter

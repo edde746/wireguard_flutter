@@ -58,7 +58,10 @@ namespace wireguard_flutter
 
   WireguardFlutterPlugin::WireguardFlutterPlugin() {}
 
-  WireguardFlutterPlugin::~WireguardFlutterPlugin() {}
+  WireguardFlutterPlugin::~WireguardFlutterPlugin() 
+  {
+    CleanupTempConfigFile();
+  }
 
   void WireguardFlutterPlugin::HandleMethodCall(const MethodCall<EncodableValue> &call,
                                                 unique_ptr<MethodResult<EncodableValue>> result)
@@ -107,10 +110,12 @@ namespace wireguard_flutter
       try
       {
         wg_config_filename = WriteConfigToTempFile(*wgQuickConfig);
+        this->temp_config_file_path_ = wg_config_filename;
       }
       catch (exception &e)
       {
         this->tunnel_service_->EmitState("no_connection");
+        CleanupTempConfigFile();
         result->Error(string("Could not write wireguard config: ").append(e.what()));
         return;
       }
@@ -136,6 +141,7 @@ namespace wireguard_flutter
       }
       catch (exception &e)
       {
+        CleanupTempConfigFile();
         result->Error(string(e.what()));
         return;
       }
@@ -155,9 +161,11 @@ namespace wireguard_flutter
       try
       {
         tunnel_service->Stop();
+        CleanupTempConfigFile();
       }
       catch (exception &e)
       {
+        CleanupTempConfigFile();
         result->Error(string(e.what()));
       }
 
@@ -207,6 +215,15 @@ namespace wireguard_flutter
     }
 
     return nullptr;
+  }
+
+  void WireguardFlutterPlugin::CleanupTempConfigFile()
+  {
+    if (!temp_config_file_path_.empty())
+    {
+      DeleteFile(temp_config_file_path_.c_str());
+      temp_config_file_path_.clear();
+    }
   }
 
 } // namespace wireguard_flutter
